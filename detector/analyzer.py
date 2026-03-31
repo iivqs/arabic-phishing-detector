@@ -8,7 +8,9 @@ from urllib.parse import urlparse
 from detector.checks import (
     domain_check, whois_check, ssl_check,
     content_check, redirect_check,
-    tld_check, url_structure_check,
+    tld_check, url_structure_check, homoglyph_check,
+    entropy_check, subdomain_brand_check,
+    form_exfiltration_check, arabic_keyboard_check,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,11 +50,16 @@ def analyze(url: str) -> dict:
 
     checks = [
         url_structure_check.check(url),
+        entropy_check.check(url),
+        homoglyph_check.check(url),
+        arabic_keyboard_check.check(url),
+        subdomain_brand_check.check(url),
         tld_check.check(url),
         domain_check.check(url),
         whois_check.check(url),
         ssl_check.check(url),
         content_check.check(url),
+        form_exfiltration_check.check(url),
         redirect_check.check(url),
     ]
 
