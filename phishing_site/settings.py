@@ -84,8 +84,25 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ---------------------------------------------------------------------------
+# Security headers
+# ---------------------------------------------------------------------------
+SECURE_CONTENT_TYPE_NOSNIFF = True     # X-Content-Type-Options: nosniff
+X_FRAME_OPTIONS = 'DENY'               # X-Frame-Options: DENY
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# Production-only security settings (active when DJANGO_DEBUG=false)
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000         # 1 year HSTS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True           # session cookie only over HTTPS
+    CSRF_COOKIE_SECURE = True              # CSRF cookie only over HTTPS
+    SECURE_SSL_REDIRECT = True             # redirect HTTP → HTTPS
+
 # Sessions expire after 24 hours
 SESSION_COOKIE_AGE = 86400
+SESSION_COOKIE_HTTPONLY = True             # JS cannot access session cookie
 
 # ---------------------------------------------------------------------------
 # Logging — writes to logs/app.log with daily rotation (keeps 30 days)

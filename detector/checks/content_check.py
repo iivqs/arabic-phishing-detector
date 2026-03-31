@@ -12,10 +12,10 @@ Score logic:
   Page fetch failed → +0 (skip gracefully)
 """
 
-import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from detector.brands import SAUDI_BRANDS
+from detector.safe_request import safe_get, SSRFError
 
 HEADERS = {
     "User-Agent": (
@@ -32,13 +32,20 @@ def check(url: str) -> dict:
     target_domain = parsed.netloc.lower().removeprefix("www.")
 
     try:
-        response = requests.get(
+        response = safe_get(
             url, headers=HEADERS, timeout=FETCH_TIMEOUT,
             allow_redirects=True, stream=True,
         )
         response.raise_for_status()
         content = response.raw.read(1_048_576, decode_content=True)  # cap at 1 MB
-    except requests.RequestException as e:
+    except SSRFError as e:
+        return {
+            "name": "Content Analysis",
+            "status": "HIGH RISK",
+            "score": 30,
+            "detail": f"URL targets an internal/private address — SSRF blocked. {e}",
+        }
+    except Exception as e:
         return {
             "name": "Content Analysis",
             "status": "UNKNOWN",

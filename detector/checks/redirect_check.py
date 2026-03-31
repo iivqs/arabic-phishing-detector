@@ -11,8 +11,8 @@ Score logic:
   Fetch failed → +0 (skip gracefully)
 """
 
-import requests
 from urllib.parse import urlparse
+from detector.safe_request import safe_get, SSRFError
 
 HEADERS = {
     "User-Agent": (
@@ -33,8 +33,15 @@ def check(url: str) -> dict:
     original_domain = _get_base_domain(url)
 
     try:
-        response = requests.get(url, headers=HEADERS, timeout=FETCH_TIMEOUT, allow_redirects=True)
-    except requests.RequestException as e:
+        response = safe_get(url, headers=HEADERS, timeout=FETCH_TIMEOUT, allow_redirects=True)
+    except SSRFError as e:
+        return {
+            "name": "Redirect Chain",
+            "status": "HIGH RISK",
+            "score": 15,
+            "detail": f"URL targets an internal/private address — SSRF blocked. {e}",
+        }
+    except Exception as e:
         return {
             "name": "Redirect Chain",
             "status": "UNKNOWN",

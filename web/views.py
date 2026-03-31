@@ -1,8 +1,12 @@
 import logging
 from django.shortcuts import render
+from django.core.cache import cache
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
 from web.forms import URLForm
 from detector.analyzer import analyze
+
+RATE_LIMIT = 10       # max scans per window
+RATE_WINDOW = 60      # seconds
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,23 @@ CHECKS_INFO = [
 
 SCAN_TIMEOUT = 30
 MAX_HISTORY  = 5
+
+
+def _get_client_ip(request) -> str:
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+def _is_rate_limited(request) -> bool:
+    ip = _get_client_ip(request)
+    key = f"rl:{ip}"
+    count = cache.get(key, 0)
+    if count >= RATE_LIMIT:
+        return True
+    cache.set(key, count + 1, RATE_WINDOW)
+    return False
 
 
 def _run_with_timeout(url: str) -> dict:
@@ -78,6 +99,13 @@ def scan(request):
             "form": URLForm(),
             "checks_info": CHECKS_INFO,
             "history": request.session.get("scan_history", []),
+        })
+
+    if _is_rate_limited(request):
+        return render(request, "web/error.html", {
+            "form": URLForm(),
+            "message": f"لقد تجاوزت الحد المسموح به ({RATE_LIMIT} طلبات في الدقيقة). يرجى الانتظار قليلاً.",
+            "url": None,
         })
 
     form = URLForm(request.POST)
