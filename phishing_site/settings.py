@@ -99,6 +99,10 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True           # session cookie only over HTTPS
     CSRF_COOKIE_SECURE = True              # CSRF cookie only over HTTPS
     SECURE_SSL_REDIRECT = True             # redirect HTTP → HTTPS
+    # Railway terminates SSL at the proxy and forwards requests internally as HTTP.
+    # This tells Django to trust the X-Forwarded-Proto header so it knows the
+    # original request was HTTPS — preventing the infinite redirect loop.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Sessions expire after 24 hours
 SESSION_COOKIE_AGE = 86400
