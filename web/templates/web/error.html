@@ -3,21 +3,41 @@
 {% block title %}خطأ في الفحص — كاشف مواقع التصيد{% endblock %}
 
 {% block content %}
-<div class="card" style="border-color:#f85149; text-align:center; padding:48px;">
-  <div style="font-size:48px; margin-bottom:16px;">⚠</div>
-  <h2 style="font-size:22px; margin-bottom:12px; color:#f85149;">فشل الفحص</h2>
-  {% if url %}
-    <div class="analyzed-url" style="margin:0 auto 16px; max-width:600px;">{{ url }}</div>
-  {% endif %}
-  <p style="color:#8b949e; margin-bottom:28px; font-size:15px; line-height:1.8;">{{ message }}</p>
+<div style="max-width:560px; margin:0 auto;">
+  <div class="card fade-up" style="border-color:rgba(239,68,68,0.35);
+       background:linear-gradient(160deg, rgba(239,68,68,0.05) 0%, var(--bg-card) 60%);
+       padding:48px 36px; text-align:center;">
 
-  <form method="post" action="{% url 'scan' %}" id="scan-form">
-    {% csrf_token %}
-    <div class="search-box" style="max-width:520px; margin:0 auto;">
-      {{ form.url }}
-      <button type="submit" class="btn" id="scan-btn">حاول مجدداً</button>
+    <div style="width:64px; height:64px; border-radius:16px; margin:0 auto 20px;
+                background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25);
+                display:flex; align-items:center; justify-content:center; font-size:28px;">
+      ⚠
     </div>
-  </form>
+
+    <h2 style="font-size:22px; font-weight:800; margin-bottom:10px; color:#f87171;">فشل الفحص</h2>
+
+    {% if url %}
+      <div class="analyzed-url" style="margin:0 auto 16px; max-width:480px;
+           background:var(--bg); border:1px solid var(--border); border-radius:8px;
+           padding:8px 14px;">{{ url }}</div>
+    {% endif %}
+
+    <p style="color:var(--text-2); margin-bottom:32px; font-size:15px; line-height:1.8;">
+      {{ message }}
+    </p>
+
+    <form method="post" action="{% url 'scan' %}" id="scan-form">
+      {% csrf_token %}
+      <div class="search-wrap" style="text-align:right;">
+        {{ form.url }}
+        <button type="submit" class="btn" id="scan-btn">حاول مجدداً</button>
+      </div>
+    </form>
+
+    <a href="{% url 'index' %}" class="scan-again" style="justify-content:center; margin-top:20px;">
+      ← العودة للرئيسية
+    </a>
+  </div>
 </div>
 
 <script>

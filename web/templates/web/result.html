@@ -4,126 +4,192 @@
 
 {% block content %}
 
-{# Re-run form #}
-<form method="post" action="{% url 'scan' %}" id="scan-form" style="margin-bottom:32px;">
+{# ── Re-run form ───────────────────────────────────────────── #}
+<form method="post" action="{% url 'scan' %}" id="scan-form" style="margin-bottom:36px;">
   {% csrf_token %}
-  <div class="search-box">
+  <div class="search-wrap">
     {{ form.url }}
     <button type="submit" class="btn" id="scan-btn">تحليل</button>
   </div>
 </form>
 
-{# Loading indicator #}
-<div id="loading" style="display:none; margin-top:16px; text-align:center; color:#8b949e;">
-  <div style="font-size:14px; margin-bottom:10px;">جاري الفحص… قد يستغرق حتى 30 ثانية</div>
-  <div class="score-track" style="max-width:440px; margin:0 auto;">
-    <div id="loading-bar" style="height:8px; background:#58a6ff; border-radius:4px; width:0; transition:width 28s linear;"></div>
+{# Loading bar (hidden by default) #}
+<div id="loading" style="display:none; margin-bottom:24px;">
+  <div class="score-track" style="height:3px;">
+    <div id="loading-bar" style="height:3px; background:linear-gradient(90deg,var(--blue),var(--purple));
+         border-radius:6px; width:0; transition:width 28s linear;"></div>
   </div>
 </div>
 
 {% with score=report.score level=report.risk_level %}
 
-{# Summary card #}
-<div class="card" style="border-color:{% if level == 'High' %}#f85149{% elif level == 'Medium' %}#e3b341{% else %}#3fb950{% endif %};">
+{# ── Summary card ──────────────────────────────────────────── #}
+<div class="card fade-up" style="
+  border-color:{% if level == 'High' %}rgba(239,68,68,0.4){% elif level == 'Medium' %}rgba(245,158,11,0.4){% else %}rgba(16,185,129,0.4){% endif %};
+  background: linear-gradient(160deg,
+    {% if level == 'High' %}rgba(239,68,68,0.06){% elif level == 'Medium' %}rgba(245,158,11,0.06){% else %}rgba(16,185,129,0.06){% endif %} 0%,
+    var(--bg-card) 50%);
+  padding: 28px 28px 24px;">
+
   <div class="card-title">نتيجة التحليل</div>
-  <div class="analyzed-url">{{ report.url }}</div>
+  <div class="analyzed-url" style="margin-bottom:20px;">{{ report.url }}</div>
 
-  <div style="margin-top:20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-    <div style="font-size:42px; font-weight:800;
-      {% if level == 'High' %}color:#f85149;
-      {% elif level == 'Medium' %}color:#e3b341;
-      {% else %}color:#3fb950;{% endif %}">
-      {{ score }}<span style="font-size:16px; font-weight:400; color:#8b949e;">/100</span>
+  <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:18px;">
+
+    {# Score ring #}
+    <div style="position:relative; flex-shrink:0;">
+      <svg width="96" height="96" viewBox="0 0 96 96" style="transform:rotate(-90deg);">
+        <circle cx="48" cy="48" r="40" fill="none" stroke="var(--border)" stroke-width="7"/>
+        <circle cx="48" cy="48" r="40" fill="none"
+          stroke="{% if level == 'High' %}#ef4444{% elif level == 'Medium' %}#f59e0b{% else %}#10b981{% endif %}"
+          stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="251.2"
+          stroke-dashoffset="{{ 251.2|floatformat:0 }}"
+          id="score-ring"
+          style="transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1);"/>
+      </svg>
+      <div style="position:absolute; inset:0; display:flex; flex-direction:column;
+                  align-items:center; justify-content:center; line-height:1;">
+        <span id="score-display" style="font-size:26px; font-weight:900;
+          {% if level == 'High' %}color:#f87171;{% elif level == 'Medium' %}color:#fbbf24;{% else %}color:#34d399;{% endif %}">0</span>
+        <span style="font-size:10px; color:var(--text-3); font-weight:600;">/100</span>
+      </div>
     </div>
 
-    <span class="badge
-      {% if level == 'High' %}badge-high
-      {% elif level == 'Medium' %}badge-medium
-      {% else %}badge-low{% endif %}"
-      style="font-size:14px; padding:6px 16px;">
-      {% if level == 'High' %}⚠ خطر مرتفع
-      {% elif level == 'Medium' %}⚡ خطر متوسط
-      {% else %}✓ خطر منخفض{% endif %}
-    </span>
-  </div>
-
-  <div class="score-track" style="margin-top:14px;">
-    <div class="score-fill
-      {% if level == 'High' %}fill-high
-      {% elif level == 'Medium' %}fill-medium
-      {% else %}fill-low{% endif %}"
-      style="width:{{ score }}%;">
+    {# Risk label + verdict #}
+    <div style="flex:1; min-width:200px;">
+      <div style="margin-bottom:10px;">
+        <span class="badge {% if level == 'High' %}badge-high{% elif level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}"
+              style="font-size:14px; padding:6px 18px;">
+          {% if level == 'High' %}⚠ خطر مرتفع{% elif level == 'Medium' %}⚡ خطر متوسط{% else %}✓ خطر منخفض{% endif %}
+        </span>
+      </div>
+      <div style="font-size:14px; color:var(--text-2); line-height:1.7; direction:ltr; text-align:left;">
+        {{ report.verdict }}
+      </div>
     </div>
   </div>
 
-  <div class="verdict-text" style="margin-top:16px; direction:ltr; text-align:left;">{{ report.verdict }}</div>
+  {# Score bar #}
+  <div class="score-track">
+    <div class="score-fill {% if level == 'High' %}fill-high{% elif level == 'Medium' %}fill-medium{% else %}fill-low{% endif %}"
+         id="score-bar" style="width:0%;"></div>
+  </div>
 </div>
 
-{# Score breakdown #}
+{# ── Score breakdown ───────────────────────────────────────── #}
 {% if report.score > 0 %}
-<p class="section-label">مساهمة كل فحص في النتيجة</p>
-<div class="card" style="padding:20px 24px;">
-  {% for check in report.checks %}{% if check.score > 0 %}
-  <div class="breakdown-row">
-    <div class="breakdown-name">{{ check.name_ar }}</div>
-    <div class="breakdown-bar-track">
-      <div class="breakdown-bar-fill
-        {% if check.status == 'HIGH RISK' %}fill-high
-        {% elif check.status == 'SUSPICIOUS' or check.status == 'CAUTION' %}fill-medium
-        {% else %}fill-low{% endif %}"
-        style="width:{% widthratio check.score 100 100 %}%;"></div>
+<div class="fade-up" style="animation-delay:0.1s;">
+  <p class="section-label">مساهمة كل فحص في النتيجة</p>
+  <div class="card" style="padding:22px 24px;">
+    {% for check in report.checks %}{% if check.score > 0 %}
+    <div class="breakdown-row">
+      <div class="breakdown-name">{{ check.name_ar }}</div>
+      <div class="breakdown-bar-track">
+        <div class="breakdown-bar-fill
+          {% if check.status == 'HIGH RISK' %}fill-high
+          {% elif check.status == 'SUSPICIOUS' or check.status == 'CAUTION' %}fill-medium
+          {% else %}fill-low{% endif %}"
+          data-width="{% widthratio check.score 100 100 %}"></div>
+      </div>
+      <div class="breakdown-score-label">+{{ check.score }}</div>
     </div>
-    <div class="breakdown-score-label">{{ check.score }}/100</div>
+    {% endif %}{% endfor %}
+    <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);
+                font-size:12px; color:var(--text-3); display:flex; justify-content:space-between;">
+      <span>المجموع النهائي</span>
+      <span style="font-family:monospace; font-weight:700; color:var(--text-2);">{{ report.score }} / 100</span>
+    </div>
   </div>
-  {% endif %}{% endfor %}
-  <div style="margin-top:12px; font-size:12px; color:#484f58; border-top:1px solid #21262d; padding-top:10px;">المجموع النهائي: <strong style="color:#8b949e;">{{ report.score }}/100</strong></div>
 </div>
 {% endif %}
 
-{# Checks table #}
-<p class="section-label">تفاصيل الفحص</p>
-<div class="card" style="padding:0; overflow:hidden;">
-  <table class="checks-table">
-    <thead>
-      <tr>
-        <th>الفحص</th>
-        <th>الحالة</th>
-        <th style="text-align:left;">التفاصيل</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for check in report.checks %}
-      <tr>
-        <td style="font-weight:700; white-space:nowrap;">{{ check.name_ar }}</td>
-        <td style="white-space:nowrap;">
-          <span class="badge
-            {% if check.status == 'HIGH RISK' %}badge-high
-            {% elif check.status == 'SUSPICIOUS' or check.status == 'CAUTION' %}badge-medium
-            {% elif check.status == 'PASS' %}badge-low
-            {% else %}badge-unknown{% endif %}">
-            {{ check.status_ar }}
-          </span>
-        </td>
-        <td class="detail-cell">{{ check.detail }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{# ── Checks table ──────────────────────────────────────────── #}
+<div class="fade-up" style="animation-delay:0.15s;">
+  <p class="section-label">تفاصيل الفحوصات ({{ report.checks|length }} فحصاً)</p>
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table class="checks-table">
+      <thead>
+        <tr>
+          <th>الفحص</th>
+          <th>الحالة</th>
+          <th style="text-align:left; direction:ltr;">التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for check in report.checks %}
+        <tr class="
+          {% if check.status == 'HIGH RISK' %}row-high
+          {% elif check.status == 'SUSPICIOUS' or check.status == 'CAUTION' %}row-medium
+          {% elif check.status == 'PASS' %}row-low
+          {% else %}row-unknown{% endif %}">
+          <td style="font-weight:700; white-space:nowrap;">{{ check.name_ar }}</td>
+          <td style="white-space:nowrap;">
+            <span class="badge
+              {% if check.status == 'HIGH RISK' %}badge-high
+              {% elif check.status == 'SUSPICIOUS' or check.status == 'CAUTION' %}badge-medium
+              {% elif check.status == 'PASS' %}badge-low
+              {% else %}badge-unknown{% endif %}">
+              {{ check.status_ar }}
+            </span>
+          </td>
+          <td class="detail-cell">{{ check.detail }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% endwith %}
 
-<a href="{% url 'index' %}" class="scan-again">→ فحص رابط آخر</a>
+<a href="{% url 'index' %}" class="scan-again fade-up" style="animation-delay:0.2s;">
+  ← فحص رابط آخر
+</a>
 
 <script>
-  document.getElementById("scan-form").addEventListener("submit", function () {
+  // Animate score counting up
+  var targetScore = {{ report.score }};
+  var level       = "{{ report.risk_level }}";
+  var display     = document.getElementById("score-display");
+  var bar         = document.getElementById("score-bar");
+  var ring        = document.getElementById("score-ring");
+  var circumference = 251.2;
+
+  // Count-up animation
+  var start = null;
+  var duration = 900;
+  function countUp(ts) {
+    if (!start) start = ts;
+    var progress = Math.min((ts - start) / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    var current = Math.round(eased * targetScore);
+    display.textContent = current;
+    if (progress < 1) requestAnimationFrame(countUp);
+  }
+
+  // Trigger animations after a short delay
+  setTimeout(function() {
+    requestAnimationFrame(countUp);
+    bar.style.width = targetScore + "%";
+    // SVG ring: dashoffset = circumference * (1 - score/100)
+    ring.style.strokeDashoffset = (circumference * (1 - targetScore / 100)).toFixed(1);
+  }, 150);
+
+  // Animate breakdown bars
+  setTimeout(function() {
+    document.querySelectorAll(".breakdown-bar-fill[data-width]").forEach(function(el) {
+      el.style.width = el.getAttribute("data-width") + "%";
+    });
+  }, 300);
+
+  // Re-scan form
+  document.getElementById("scan-form").addEventListener("submit", function() {
     var btn = document.getElementById("scan-btn");
     btn.disabled = true;
     btn.textContent = "جاري الفحص…";
     document.getElementById("loading").style.display = "block";
-    setTimeout(function () {
-      document.getElementById("loading-bar").style.width = "95%";
-    }, 50);
+    setTimeout(function() { document.getElementById("loading-bar").style.width = "95%"; }, 50);
   });
 </script>
 {% endblock %}

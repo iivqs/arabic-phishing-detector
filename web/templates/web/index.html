@@ -1,56 +1,91 @@
 {% extends "web/base.html" %}
 
 {% block content %}
-<h1 style="font-size:28px; font-weight:800; margin-bottom:8px;">هل هذا الرابط آمن؟</h1>
-<p style="color:#8b949e; margin-bottom:32px; font-size:15px;">
-  الصق أي رابط للتحقق منه بحثاً عن مؤشرات التصيد الاحتيالي التي تستهدف المواقع السعودية والعربية.
-</p>
 
-<form method="post" action="{% url 'scan' %}" id="scan-form">
-  {% csrf_token %}
-  <div class="search-box">
-    {{ form.url }}
-    <button type="submit" class="btn" id="scan-btn">تحليل</button>
+{# ── Hero ─────────────────────────────────────────────────── #}
+<div class="fade-up" style="text-align:center; padding: 12px 0 48px;">
+  <div style="display:inline-flex; align-items:center; gap:8px;
+              background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2);
+              border-radius:20px; padding:5px 14px; font-size:12px; color:#60a5fa;
+              font-weight:600; margin-bottom:24px; letter-spacing:0.3px;">
+    ✦ يدعم اكتشاف التصيد باللغة العربية
   </div>
-  {% if form.url.errors %}
-    <div class="error-msg">{{ form.url.errors.0 }}</div>
-  {% endif %}
-</form>
+  <h1 style="font-size:36px; font-weight:900; line-height:1.25; margin-bottom:14px;
+             background: linear-gradient(135deg, #f1f5f9 30%, #94a3b8);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+             background-clip: text;">
+    هل هذا الرابط آمن؟
+  </h1>
+  <p style="color:var(--text-2); font-size:15px; max-width:520px; margin:0 auto; line-height:1.8;">
+    الصق أي رابط للكشف عن مؤشرات التصيد الاحتيالي التي تستهدف المواقع السعودية والخليجية
+  </p>
+</div>
 
-{# Loading indicator #}
-<div id="loading" style="display:none; margin-top:24px; text-align:center; color:#8b949e;">
-  <div style="font-size:14px; margin-bottom:10px;">جاري الفحص… قد يستغرق حتى 30 ثانية</div>
-  <div class="score-track" style="max-width:440px; margin:0 auto;">
-    <div id="loading-bar" style="height:8px; background:#58a6ff; border-radius:4px; width:0; transition:width 28s linear;"></div>
+{# ── Search form ───────────────────────────────────────────── #}
+<div class="fade-up" style="animation-delay:0.05s;">
+  <form method="post" action="{% url 'scan' %}" id="scan-form">
+    {% csrf_token %}
+    <div class="search-wrap">
+      {{ form.url }}
+      <button type="submit" class="btn pulse" id="scan-btn">تحليل الرابط</button>
+    </div>
+    {% if form.url.errors %}
+      <div class="error-msg">{{ form.url.errors.0 }}</div>
+    {% endif %}
+  </form>
+
+  <div style="display:flex; gap:20px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+    <span style="font-size:12px; color:var(--text-3); font-family:monospace;">مثال: stc.com.sa</span>
+    <span style="font-size:12px; color:var(--text-3); font-family:monospace;">alrajhibank.com.sa</span>
+    <span style="font-size:12px; color:var(--text-3); font-family:monospace;">absher.com.sa</span>
   </div>
 </div>
 
-{# Recent scans #}
+{# ── Loading ───────────────────────────────────────────────── #}
+<div id="loading" style="display:none; margin-top:32px;">
+  <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:28px 24px; text-align:center;">
+    <div style="font-size:28px; margin-bottom:12px;">🔍</div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:4px;">جاري الفحص…</div>
+    <div style="font-size:13px; color:var(--text-3); margin-bottom:20px;">قد يستغرق حتى 30 ثانية</div>
+    <div class="score-track" style="max-width:400px; margin:0 auto; height:4px;">
+      <div id="loading-bar" style="height:4px; background:linear-gradient(90deg,var(--blue),var(--purple));
+           border-radius:6px; width:0; transition:width 28s linear;"></div>
+    </div>
+    <div id="loading-steps" style="display:flex; justify-content:center; gap:8px; margin-top:16px; flex-wrap:wrap;">
+      {% for step in checks_info|slice:":5" %}
+      <span class="step-pill" style="font-size:11px; color:var(--text-3); background:var(--border-soft);
+            padding:3px 10px; border-radius:10px; transition:all 0.3s;">{{ step.name }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# ── Recent scans ──────────────────────────────────────────── #}
 {% if history %}
-<div style="margin-top:48px;">
+<div class="fade-up" style="margin-top:52px; animation-delay:0.1s;">
   <p class="section-label">عمليات الفحص الأخيرة</p>
   <div class="card" style="padding:0; overflow:hidden;">
     <table class="checks-table">
       <thead>
         <tr>
           <th>الرابط</th>
-          <th>النتيجة</th>
-          <th>مستوى الخطر</th>
+          <th style="text-align:center;">النتيجة</th>
+          <th style="text-align:center;">مستوى الخطر</th>
         </tr>
       </thead>
       <tbody>
         {% for item in history %}
-        <tr>
-          <td style="font-family:monospace; font-size:13px; color:#8b949e; word-break:break-all; direction:ltr; text-align:left;">{{ item.url }}</td>
-          <td>{{ item.score }}/100</td>
-          <td>
-            <span class="badge
-              {% if item.risk_level == 'High' %}badge-high
-              {% elif item.risk_level == 'Medium' %}badge-medium
-              {% else %}badge-low{% endif %}">
-              {% if item.risk_level == 'High' %}خطر مرتفع
-              {% elif item.risk_level == 'Medium' %}خطر متوسط
-              {% else %}منخفض{% endif %}
+        <tr class="{% if item.risk_level == 'High' %}row-high{% elif item.risk_level == 'Medium' %}row-medium{% else %}row-low{% endif %}">
+          <td class="detail-cell" style="max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ item.url }}</td>
+          <td style="text-align:center; font-weight:700; font-family:monospace;
+              {% if item.risk_level == 'High' %}color:#f87171;
+              {% elif item.risk_level == 'Medium' %}color:#fbbf24;
+              {% else %}color:#34d399;{% endif %}">
+            {{ item.score }}<span style="font-size:11px; color:var(--text-3);">/100</span>
+          </td>
+          <td style="text-align:center;">
+            <span class="badge {% if item.risk_level == 'High' %}badge-high{% elif item.risk_level == 'Medium' %}badge-medium{% else %}badge-low{% endif %}">
+              {% if item.risk_level == 'High' %}⚠ خطر مرتفع{% elif item.risk_level == 'Medium' %}⚡ متوسط{% else %}✓ آمن{% endif %}
             </span>
           </td>
         </tr>
@@ -61,28 +96,44 @@
 </div>
 {% endif %}
 
-{# What we check #}
-<div style="margin-top:48px;">
-  <p class="section-label">ما الذي يتم فحصه</p>
-  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px;">
+{# ── What we check ─────────────────────────────────────────── #}
+<div class="fade-up" style="margin-top:52px; animation-delay:0.15s;">
+  <p class="section-label">ما الذي يتم فحصه ({{ checks_info|length }} فحصاً)</p>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:10px;">
     {% for item in checks_info %}
-    <div class="card" style="padding:16px;">
-      <div style="font-size:14px; font-weight:700; margin-bottom:6px;">{{ item.name }}</div>
-      <div style="font-size:13px; color:#8b949e; line-height:1.7;">{{ item.desc }}</div>
+    <div class="card" style="padding:18px 20px; margin-bottom:0;
+         border-top: 2px solid rgba(59,130,246,0.3);
+         transition: border-color 0.2s, transform 0.2s;"
+         onmouseover="this.style.borderTopColor='var(--blue)'; this.style.transform='translateY(-2px)';"
+         onmouseout="this.style.borderTopColor='rgba(59,130,246,0.3)'; this.style.transform='translateY(0)';">
+      <div style="font-size:14px; font-weight:700; margin-bottom:6px; color:var(--text-1);">{{ item.name }}</div>
+      <div style="font-size:13px; color:var(--text-2); line-height:1.75;">{{ item.desc }}</div>
     </div>
     {% endfor %}
   </div>
 </div>
 
 <script>
-  document.getElementById("scan-form").addEventListener("submit", function () {
-    var btn = document.getElementById("scan-btn");
+  var form  = document.getElementById("scan-form");
+  var btn   = document.getElementById("scan-btn");
+  var load  = document.getElementById("loading");
+  var bar   = document.getElementById("loading-bar");
+
+  form.addEventListener("submit", function () {
     btn.disabled = true;
+    btn.classList.remove("pulse");
     btn.textContent = "جاري الفحص…";
-    document.getElementById("loading").style.display = "block";
-    setTimeout(function () {
-      document.getElementById("loading-bar").style.width = "95%";
-    }, 50);
+    load.style.display = "block";
+    // animate steps
+    var pills = document.querySelectorAll(".step-pill");
+    pills.forEach(function(p, i) {
+      setTimeout(function() {
+        p.style.color = "#60a5fa";
+        p.style.background = "rgba(59,130,246,0.1)";
+        p.style.borderColor = "rgba(59,130,246,0.3)";
+      }, i * 4500);
+    });
+    setTimeout(function () { bar.style.width = "95%"; }, 50);
   });
 </script>
 {% endblock %}

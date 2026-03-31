@@ -5,160 +5,285 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}كاشف مواقع التصيد الاحتيالي{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg:          #070b11;
+      --bg-card:     #0d1117;
+      --bg-card-2:   #111827;
+      --border:      #1e2733;
+      --border-soft: #161d27;
+      --blue:        #3b82f6;
+      --blue-dim:    #1d4ed8;
+      --purple:      #8b5cf6;
+      --green:       #10b981;
+      --yellow:      #f59e0b;
+      --red:         #ef4444;
+      --text-1:      #f1f5f9;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
+      background: var(--bg);
+      color: var(--text-1);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       direction: rtl;
+      /* subtle dot-grid background */
+      background-image: radial-gradient(circle, #1e2733 1px, transparent 1px);
+      background-size: 32px 32px;
+      background-attachment: fixed;
     }
 
+    /* ── Header ────────────────────────────────────────────── */
     header {
-      border-bottom: 1px solid #21262d;
-      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      background: rgba(7, 11, 17, 0.85);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    header .logo    { font-size: 20px; font-weight: 800; color: #58a6ff; }
-    header .tagline { font-size: 13px; color: #8b949e; }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(59,130,246,0.35);
+    }
+    .header-title  { font-size: 17px; font-weight: 800; color: var(--text-1); }
+    .header-sub    { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+    .header-badge  {
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
 
-    main { flex: 1; padding: 48px 24px; max-width: 900px; margin: 0 auto; width: 100%; }
+    /* ── Layout ────────────────────────────────────────────── */
+    main { flex: 1; padding: 56px 24px 80px; max-width: 860px; margin: 0 auto; width: 100%; }
 
     footer {
       text-align: center;
-      padding: 16px;
-      font-size: 13px;
-      color: #484f58;
-      border-top: 1px solid #21262d;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--text-3);
+      border-top: 1px solid var(--border);
+      background: rgba(7,11,17,0.6);
+      letter-spacing: 0.3px;
     }
 
-    /* Form */
-    .search-box { display: flex; gap: 10px; margin-bottom: 12px; }
+    /* ── Cards ─────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 10px;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+    }
+
+    /* ── Form / Search ─────────────────────────────────────── */
+    .search-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px 6px 6px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-wrap:focus-within {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
     .url-input {
       flex: 1;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-size: 15px;
-      color: #e6edf3;
+      background: transparent;
+      border: none;
       outline: none;
-      transition: border-color 0.2s;
+      font-size: 14px;
+      color: var(--text-1);
       direction: ltr;
       text-align: left;
-      font-family: monospace;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      padding: 10px 0;
     }
-    .url-input:focus { border-color: #58a6ff; }
-    .url-input::placeholder { color: #484f58; font-family: 'Cairo', sans-serif; direction: ltr; }
+    .url-input::placeholder { color: var(--text-3); font-family: 'Cairo', sans-serif; }
 
     .btn {
-      background: #238636;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dim));
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 12px 28px;
-      font-size: 15px;
+      border-radius: 10px;
+      padding: 11px 26px;
+      font-size: 14px;
       font-weight: 700;
       font-family: 'Cairo', sans-serif;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
       white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+      flex-shrink: 0;
     }
-    .btn:hover    { background: #2ea043; }
-    .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+    .btn:hover    { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+    .btn:active   { transform: translateY(0); }
+    .btn:disabled { background: var(--border); color: var(--text-3); box-shadow: none; cursor: not-allowed; transform: none; }
 
-    .error-msg { color: #f85149; font-size: 13px; margin-top: 6px; }
+    .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; padding-right: 4px; }
 
-    /* Badges */
+    /* ── Badges ────────────────────────────────────────────── */
     .badge {
-      display: inline-block;
+      display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 12px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.3px;
     }
-    .badge-high    { background: #3d1a1a; color: #f85149; border: 1px solid #f85149; }
-    .badge-medium  { background: #2d2208; color: #e3b341; border: 1px solid #e3b341; }
-    .badge-low     { background: #112d1a; color: #3fb950; border: 1px solid #3fb950; }
-    .badge-unknown { background: #1a2433; color: #58a6ff; border: 1px solid #58a6ff; }
+    .badge-high    { background: rgba(239,68,68,0.12);   color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-medium  { background: rgba(245,158,11,0.12);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-low     { background: rgba(16,185,129,0.12);  color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-unknown { background: rgba(59,130,246,0.12);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
 
-    /* Score bar */
+    /* ── Score bar ─────────────────────────────────────────── */
     .score-track {
-      background: #21262d;
-      border-radius: 4px;
-      height: 8px;
+      background: var(--border);
+      border-radius: 6px;
+      height: 6px;
       width: 100%;
       overflow: hidden;
-      margin: 8px 0;
+      margin: 10px 0;
     }
-    .score-fill   { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-    .fill-high    { background: #f85149; }
-    .fill-medium  { background: #e3b341; }
-    .fill-low     { background: #3fb950; }
+    .score-fill  { height: 100%; border-radius: 6px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+    .fill-high   { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .fill-medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .fill-low    { background: linear-gradient(90deg, #10b981, #34d399); }
 
-    /* Table */
+    /* ── Checks table ──────────────────────────────────────── */
     .checks-table { width: 100%; border-collapse: collapse; }
     .checks-table th {
       text-align: right;
-      padding: 10px 16px;
-      font-size: 12px;
-      color: #8b949e;
-      border-bottom: 1px solid #21262d;
+      padding: 10px 18px;
+      font-size: 11px;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
     .checks-table td {
-      padding: 12px 16px;
+      padding: 14px 18px;
       font-size: 14px;
-      border-bottom: 1px solid #161b22;
+      border-bottom: 1px solid var(--border-soft);
       vertical-align: top;
     }
     .checks-table tr:last-child td { border-bottom: none; }
-    .checks-table tr:hover td { background: #161b22; }
+    .checks-table tbody tr { transition: background 0.15s; }
+    .checks-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
     .checks-table .detail-cell {
       direction: ltr;
       text-align: left;
-      color: #8b949e;
+      color: var(--text-2);
       font-size: 13px;
+      line-height: 1.6;
     }
+    /* Colored left accent bar per status */
+    .row-high td:first-child   { border-right: 3px solid var(--red); }
+    .row-medium td:first-child { border-right: 3px solid var(--yellow); }
+    .row-low td:first-child    { border-right: 3px solid var(--green); }
+    .row-unknown td:first-child{ border-right: 3px solid #475569; }
 
-    /* Cards */
-    .card {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
+    /* ── Misc ──────────────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-bottom: 14px;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      text-transform: uppercase;
     }
-    .card-title    { font-size: 12px; text-transform: uppercase; color: #8b949e; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .verdict-text  { font-size: 15px; line-height: 1.8; color: #c9d1d9; }
-    .analyzed-url  { font-family: monospace; font-size: 13px; color: #8b949e; word-break: break-all; direction: ltr; text-align: left; margin-top: 4px; }
+    .analyzed-url {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--text-2);
+      word-break: break-all;
+      direction: ltr;
+      text-align: left;
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+    .scan-again {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 24px;
+      color: var(--blue);
+      font-size: 14px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: gap 0.2s;
+    }
+    .scan-again:hover { gap: 10px; }
 
-    .scan-again { display: inline-block; margin-top: 20px; color: #58a6ff; font-size: 14px; text-decoration: none; }
-    .scan-again:hover { text-decoration: underline; }
+    /* ── Breakdown bars ────────────────────────────────────── */
+    .breakdown-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .breakdown-name { width: 195px; font-size: 13px; font-weight: 600; text-align: right; flex-shrink: 0; color: var(--text-2); }
+    .breakdown-bar-track { background: var(--border); border-radius: 6px; height: 8px; flex: 1; overflow: hidden; }
+    .breakdown-bar-fill  { height: 100%; border-radius: 6px; width: 0; transition: width 1s cubic-bezier(.4,0,.2,1); }
+    .breakdown-score-label { font-size: 12px; color: var(--text-3); width: 44px; text-align: left; flex-shrink: 0; font-family: monospace; direction: ltr; }
 
-    .section-label { font-size: 12px; color: #484f58; margin-bottom: 14px; letter-spacing: 0.5px; }
+    /* ── Pulse animation ───────────────────────────────────── */
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+      70%  { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    }
+    .pulse { animation: pulse-ring 2s infinite; }
 
-    /* Score breakdown bars */
-    .breakdown-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .breakdown-name { width: 190px; font-size: 13px; font-weight: 700; text-align: right; flex-shrink: 0; }
-    .breakdown-bar-track { background: #21262d; border-radius: 4px; height: 10px; flex: 1; overflow: hidden; }
-    .breakdown-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
-    .breakdown-score-label { font-size: 12px; color: #8b949e; width: 44px; text-align: left; flex-shrink: 0; font-family: monospace; direction: ltr; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease both; }
   </style>
 </head>
 <body>
   <header>
-    <div>
-      <div class="logo">🛡 كاشف مواقع التصيد الاحتيالي</div>
-      <div class="tagline">يكشف مواقع التصيد التي تستهدف العلامات التجارية السعودية والخليجية</div>
+    <div class="header-brand">
+      <div class="header-icon">🛡</div>
+      <div>
+        <div class="header-title">كاشف التصيد الاحتيالي</div>
+        <div class="header-sub">Arabic Phishing Detector</div>
+      </div>
     </div>
+    <span class="header-badge">12 فحصاً</span>
   </header>
 
   <main>
@@ -166,7 +291,8 @@
   </main>
 
   <footer>
-    مبني لأغراض الأمن الدفاعي &nbsp;·&nbsp; للأغراض التعليمية فقط
+    مبني لأغراض الأمن الدفاعي &nbsp;·&nbsp; للأغراض التعليمية فقط &nbsp;·&nbsp;
+    <a href="https://github.com/iivqs/arabic-phishing-detector" style="color:var(--text-3); text-decoration:none;">GitHub ↗</a>
   </footer>
 </body>
 </html>
