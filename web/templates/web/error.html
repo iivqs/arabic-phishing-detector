@@ -1,0 +1,30 @@
+{% extends "web/base.html" %}
+
+{% block title %}خطأ في الفحص — كاشف مواقع التصيد{% endblock %}
+
+{% block content %}
+<div class="card" style="border-color:#f85149; text-align:center; padding:48px;">
+  <div style="font-size:48px; margin-bottom:16px;">⚠</div>
+  <h2 style="font-size:22px; margin-bottom:12px; color:#f85149;">فشل الفحص</h2>
+  {% if url %}
+    <div class="analyzed-url" style="margin:0 auto 16px; max-width:600px;">{{ url }}</div>
+  {% endif %}
+  <p style="color:#8b949e; margin-bottom:28px; font-size:15px; line-height:1.8;">{{ message }}</p>
+
+  <form method="post" action="{% url 'scan' %}" id="scan-form">
+    {% csrf_token %}
+    <div class="search-box" style="max-width:520px; margin:0 auto;">
+      {{ form.url }}
+      <button type="submit" class="btn" id="scan-btn">حاول مجدداً</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  document.getElementById("scan-form").addEventListener("submit", function () {
+    var btn = document.getElementById("scan-btn");
+    btn.disabled = true;
+    btn.textContent = "جاري الفحص…";
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "web/base.html" %}
+
+{% block content %}
+<h1 style="font-size:28px; font-weight:800; margin-bottom:8px;">هل هذا الرابط آمن؟</h1>
+<p style="color:#8b949e; margin-bottom:32px; font-size:15px;">
+  الصق أي رابط للتحقق منه بحثاً عن مؤشرات التصيد الاحتيالي التي تستهدف المواقع السعودية والعربية.
+</p>
+
+<form method="post" action="{% url 'scan' %}" id="scan-form">
+  {% csrf_token %}
+  <div class="search-box">
+    {{ form.url }}
+    <button type="submit" class="btn" id="scan-btn">تحليل</button>
+  </div>
+  {% if form.url.errors %}
+    <div class="error-msg">{{ form.url.errors.0 }}</div>
+  {% endif %}
+</form>
+
+{# Loading indicator #}
+<div id="loading" style="display:none; margin-top:24px; text-align:center; color:#8b949e;">
+  <div style="font-size:14px; margin-bottom:10px;">جاري الفحص… قد يستغرق حتى 30 ثانية</div>
+  <div class="score-track" style="max-width:440px; margin:0 auto;">
+    <div id="loading-bar" style="height:8px; background:#58a6ff; border-radius:4px; width:0; transition:width 28s linear;"></div>
+  </div>
+</div>
+
+{# Recent scans #}
+{% if history %}
+<div style="margin-top:48px;">
+  <p class="section-label">عمليات الفحص الأخيرة</p>
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table class="checks-table">
+      <thead>
+        <tr>
+          <th>الرابط</th>
+          <th>النتيجة</th>
+          <th>مستوى الخطر</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in history %}
+        <tr>
+          <td style="font-family:monospace; font-size:13px; color:#8b949e; word-break:break-all; direction:ltr; text-align:left;">{{ item.url }}</td>
+          <td>{{ item.score }}/100</td>
+          <td>
+            <span class="badge
+              {% if item.risk_level == 'High' %}badge-high
+              {% elif item.risk_level == 'Medium' %}badge-medium
+              {% else %}badge-low{% endif %}">
+              {% if item.risk_level == 'High' %}خطر مرتفع
+              {% elif item.risk_level == 'Medium' %}خطر متوسط
+              {% else %}منخفض{% endif %}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{# What we check #}
+<div style="margin-top:48px;">
+  <p class="section-label">ما الذي يتم فحصه</p>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px;">
+    {% for item in checks_info %}
+    <div class="card" style="padding:16px;">
+      <div style="font-size:14px; font-weight:700; margin-bottom:6px;">{{ item.name }}</div>
+      <div style="font-size:13px; color:#8b949e; line-height:1.7;">{{ item.desc }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  document.getElementById("scan-form").addEventListener("submit", function () {
+    var btn = document.getElementById("scan-btn");
+    btn.disabled = true;
+    btn.textContent = "جاري الفحص…";
+    document.getElementById("loading").style.display = "block";
+    setTimeout(function () {
+      document.getElementById("loading-bar").style.width = "95%";
+    }, 50);
+  });
+</script>
+{% endblock %}

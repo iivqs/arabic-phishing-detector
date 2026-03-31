@@ -1,0 +1,7 @@
+django>=4.2,<5.0
+requests>=2.32,<3.0
+python-whois>=0.9.4
+beautifulsoup4>=4.12
+Levenshtein>=0.25
+colorama>=0.4.6
+pytest>=8.0

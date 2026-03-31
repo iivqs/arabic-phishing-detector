@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}كاشف مواقع التصيد الاحتيالي{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      direction: rtl;
+    }
+
+    header {
+      border-bottom: 1px solid #21262d;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header .logo    { font-size: 20px; font-weight: 800; color: #58a6ff; }
+    header .tagline { font-size: 13px; color: #8b949e; }
+
+    main { flex: 1; padding: 48px 24px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 13px;
+      color: #484f58;
+      border-top: 1px solid #21262d;
+    }
+
+    /* Form */
+    .search-box { display: flex; gap: 10px; margin-bottom: 12px; }
+    .url-input {
+      flex: 1;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 15px;
+      color: #e6edf3;
+      outline: none;
+      transition: border-color 0.2s;
+      direction: ltr;
+      text-align: left;
+      font-family: monospace;
+    }
+    .url-input:focus { border-color: #58a6ff; }
+    .url-input::placeholder { color: #484f58; font-family: 'Cairo', sans-serif; direction: ltr; }
+
+    .btn {
+      background: #238636;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Cairo', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover    { background: #2ea043; }
+    .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+
+    .error-msg { color: #f85149; font-size: 13px; margin-top: 6px; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge-high    { background: #3d1a1a; color: #f85149; border: 1px solid #f85149; }
+    .badge-medium  { background: #2d2208; color: #e3b341; border: 1px solid #e3b341; }
+    .badge-low     { background: #112d1a; color: #3fb950; border: 1px solid #3fb950; }
+    .badge-unknown { background: #1a2433; color: #58a6ff; border: 1px solid #58a6ff; }
+
+    /* Score bar */
+    .score-track {
+      background: #21262d;
+      border-radius: 4px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .score-fill   { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .fill-high    { background: #f85149; }
+    .fill-medium  { background: #e3b341; }
+    .fill-low     { background: #3fb950; }
+
+    /* Table */
+    .checks-table { width: 100%; border-collapse: collapse; }
+    .checks-table th {
+      text-align: right;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      border-bottom: 1px solid #21262d;
+    }
+    .checks-table td {
+      padding: 12px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid #161b22;
+      vertical-align: top;
+    }
+    .checks-table tr:last-child td { border-bottom: none; }
+    .checks-table tr:hover td { background: #161b22; }
+    .checks-table .detail-cell {
+      direction: ltr;
+      text-align: left;
+      color: #8b949e;
+      font-size: 13px;
+    }
+
+    /* Cards */
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-title    { font-size: 12px; text-transform: uppercase; color: #8b949e; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .verdict-text  { font-size: 15px; line-height: 1.8; color: #c9d1d9; }
+    .analyzed-url  { font-family: monospace; font-size: 13px; color: #8b949e; word-break: break-all; direction: ltr; text-align: left; margin-top: 4px; }
+
+    .scan-again { display: inline-block; margin-top: 20px; color: #58a6ff; font-size: 14px; text-decoration: none; }
+    .scan-again:hover { text-decoration: underline; }
+
+    .section-label { font-size: 12px; color: #484f58; margin-bottom: 14px; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="logo">🛡 كاشف مواقع التصيد الاحتيالي</div>
+      <div class="tagline">يكشف مواقع التصيد التي تستهدف العلامات التجارية السعودية والخليجية</div>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    مبني لأغراض الأمن الدفاعي &nbsp;·&nbsp; للأغراض التعليمية فقط
+  </footer>
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% extends "web/base.html" %}
+
+{% block title %}نتيجة الفحص — كاشف مواقع التصيد{% endblock %}
+
+{% block content %}
+
+{# Re-run form #}
+<form method="post" action="{% url 'scan' %}" id="scan-form" style="margin-bottom:32px;">
+  {% csrf_token %}
+  <div class="search-box">
+    {{ form.url }}
+    <button type="submit" class="btn" id="scan-btn">تحليل</button>
+  </div>
+</form>
+
+{# Loading indicator #}
+<div id="loading" style="display:none; margin-top:16px; text-align:center; color:#8b949e;">
+  <div style="font-size:14px; margin-bottom:10px;">جاري الفحص… قد يستغرق حتى 30 ثانية</div>
+  <div class="score-track" style="max-width:440px; margin:0 auto;">
+    <div id="loading-bar" style="height:8px; background:#58a6ff; border-radius:4px; width:0; transition:width 28s linear;"></div>
+  </div>
+</div>
+
+{% with score=report.score level=report.risk_level %}
+
+{# Summary card #}
+<div class="card" style="border-color:{% if level == 'High' %}#f85149{% elif level == 'Medium' %}#e3b341{% else %}#3fb950{% endif %};">
+  <div class="card-title">نتيجة التحليل</div>
+  <div class="analyzed-url">{{ report.url }}</div>
+
+  <div style="margin-top:20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div style="font-size:42px; font-weight:800;
+      {% if level == 'High' %}color:#f85149;
+      {% elif level == 'Medium' %}color:#e3b341;
+      {% else %}color:#3fb950;{% endif %}">
+      {{ score }}<span style="font-size:16px; font-weight:400; color:#8b949e;">/100</span>
+    </div>
+
+    <span class="badge
+      {% if level == 'High' %}badge-high
+      {% elif level == 'Medium' %}badge-medium
+      {% else %}badge-low{% endif %}"
+      style="font-size:14px; padding:6px 16px;">
+      {% if level == 'High' %}⚠ خطر مرتفع
+      {% elif level == 'Medium' %}⚡ خطر متوسط
+      {% else %}✓ خطر منخفض{% endif %}
+    </span>
+  </div>
+
+  <div class="score-track" style="margin-top:14px;">
+    <div class="score-fill
+      {% if level == 'High' %}fill-high
+      {% elif level == 'Medium' %}fill-medium
+      {% else %}fill-low{% endif %}"
+      style="width:{{ score }}%;">
+    </div>
+  </div>
+
+  <div class="verdict-text" style="margin-top:16px; direction:ltr; text-align:left;">{{ report.verdict }}</div>
+</div>
+
+{# Checks table #}
+<p class="section-label">تفاصيل الفحص</p>
+<div class="card" style="padding:0; overflow:hidden;">
+  <table class="checks-table">
+    <thead>
+      <tr>
+        <th>الفحص</th>
+        <th>الحالة</th>
+        <th style="text-align:left;">التفاصيل</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for check in report.checks %}
+      <tr>
+        <td style="font-weight:700; white-space:nowrap;">{{ check.name_ar }}</td>
+        <td style="white-space:nowrap;">
+          <span class="badge
+            {% if check.status == 'HIGH RISK' %}badge-high
+            {% elif check.status == 'SUSPICIOUS' or check.status == 'CAUTION' %}badge-medium
+            {% elif check.status == 'PASS' %}badge-low
+            {% else %}badge-unknown{% endif %}">
+            {{ check.status_ar }}
+          </span>
+        </td>
+        <td class="detail-cell">{{ check.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endwith %}
+
+<a href="{% url 'index' %}" class="scan-again">→ فحص رابط آخر</a>
+
+<script>
+  document.getElementById("scan-form").addEventListener("submit", function () {
+    var btn = document.getElementById("scan-btn");
+    btn.disabled = true;
+    btn.textContent = "جاري الفحص…";
+    document.getElementById("loading").style.display = "block";
+    setTimeout(function () {
+      document.getElementById("loading-bar").style.width = "95%";
+    }, 50);
+  });
+</script>
+{% endblock %}
