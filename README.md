@@ -4,16 +4,27 @@
 ![Django](https://img.shields.io/badge/Django-4.2-green)
 ![License](https://img.shields.io/badge/License-MIT-brightgreen)
 ![Tests](https://img.shields.io/badge/Tests-11%20passing-brightgreen)
+![Deploy](https://img.shields.io/badge/Deployed-Railway-blueviolet)
 
-A phishing URL detection tool built specifically for **Saudi and Gulf brand impersonation** — the attack surface that generic tools like VirusTotal and PhishTank undercover.
+**🌐 Live Demo: [web-production-543fcd.up.railway.app](https://web-production-543fcd.up.railway.app)**
 
-Available as both a **command-line tool** and a **Django web application** with a full Arabic RTL interface.
+A phishing URL detection tool built specifically for **Saudi and Gulf brand impersonation** — the attack surface that generic tools like VirusTotal and PhishTank underserve.
+
+Available as a **live web application** (Arabic RTL interface), a **command-line tool**, and soon a **REST API**.
 
 ---
 
 ## Why This Exists
 
-Phishing attacks targeting Saudi banks, telecom providers, and government portals have increased significantly. Existing detection tools are English-centric and rely on community-submitted blacklists. This tool takes a different approach: **deterministic, explainable checks** focused on the Saudi/Gulf attack surface — no black-box ML, no API keys, no cloud dependency.
+Phishing attacks targeting Saudi banks, telecom providers, and government portals have increased significantly. Existing detection tools are English-centric and rely on community-submitted blacklists. This tool takes a different approach: **deterministic, explainable checks** focused on the Saudi/Gulf attack surface — no black-box ML, no API keys required, no cloud dependency.
+
+---
+
+## Live Demo
+
+Try it now — no install needed:
+
+**[https://web-production-543fcd.up.railway.app](https://web-production-543fcd.up.railway.app)**
 
 ---
 
@@ -47,47 +58,33 @@ Want to add more brands? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## Installation
+## Run Locally
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/arabic-phishing-detector.git
+git clone https://github.com/iivqs/arabic-phishing-detector.git
 cd arabic-phishing-detector
 pip install -r requirements.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py runserver
 ```
+
+Open **http://127.0.0.1:8000**
 
 ---
 
-## Usage
-
-### Command Line
+## Command Line
 
 ```bash
 python cli.py https://suspicious-site.com
 
-# JSON output (for piping into other tools)
+# JSON output (for scripting / piping into other tools)
 python cli.py https://suspicious-site.com --json
 ```
 
-Exits with code `1` if the URL is **High Risk** — useful in shell scripts.
+Exits with code `1` if the URL is **High Risk**.
 
-### Web Application
-
-```bash
-# 1. Copy the environment file
-cp .env.example .env
-
-# 2. Run migrations
-python manage.py migrate
-
-# 3. Start the server
-python manage.py runserver
-```
-
-Open **http://127.0.0.1:8000** in your browser.
-
----
-
-## Example Output (CLI)
+### Example Output
 
 ```
 [*] Analyzing: https://alrajhi-bank.net/login
@@ -102,21 +99,25 @@ Open **http://127.0.0.1:8000** in your browser.
 
   Risk Score : 95/100  [###################-]
   Risk Level : HIGH
-
-  Verdict: HIGH RISK — Multiple phishing indicators detected.
 ```
 
 ---
 
-## Logging
+## Deploy Your Own
 
-All scans are logged to `logs/app.log` with daily rotation (30 days of history kept).
+The project is ready to deploy on [Railway](https://railway.app) in one click:
 
-```bash
-tail -f logs/app.log              # watch live
-grep "HIGH RISK" logs/app.log     # see all dangerous URLs
-grep "ERROR" logs/app.log         # see errors only
-```
+1. Fork this repo
+2. Create a new project on Railway → Deploy from GitHub
+3. Set these environment variables:
+
+| Variable | Value |
+|----------|-------|
+| `DJANGO_SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+| `DJANGO_DEBUG` | `false` |
+| `DJANGO_ALLOWED_HOSTS` | your Railway domain |
+
+Railway runs `python manage.py migrate` and starts `gunicorn` automatically.
 
 ---
 
@@ -128,13 +129,15 @@ python -m pytest tests/ -v
 
 ---
 
-## Environment Variables
+## Logging
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DJANGO_SECRET_KEY` | auto-generated | Django secret key — **must be set in production** |
-| `DJANGO_DEBUG` | `true` | Set to `false` in production |
-| `DJANGO_ALLOWED_HOSTS` | `127.0.0.1,localhost` | Comma-separated allowed hostnames |
+All scans are written to `logs/app.log` with daily rotation (30 days kept).
+
+```bash
+tail -f logs/app.log              # watch live
+grep "HIGH RISK" logs/app.log     # dangerous URLs only
+grep "ERROR" logs/app.log         # errors only
+```
 
 ---
 
@@ -144,27 +147,19 @@ python -m pytest tests/ -v
 arabic-phishing-detector/
 ├── cli.py                     # Command-line entry point
 ├── manage.py                  # Django management
+├── Procfile                   # Railway/Heroku start command
+├── railway.toml               # Railway deploy config
 ├── requirements.txt
 ├── .env.example               # Environment variable template
 ├── detector/
 │   ├── analyzer.py            # Orchestrates all checks
-│   ├── brands.py              # Saudi/Gulf brand list
-│   └── checks/
-│       ├── url_structure_check.py
-│       ├── tld_check.py
-│       ├── domain_check.py
-│       ├── whois_check.py
-│       ├── ssl_check.py
-│       ├── content_check.py
-│       └── redirect_check.py
-├── web/                       # Django app (Arabic RTL UI)
-│   ├── views.py
-│   ├── forms.py
-│   └── templates/web/
+│   ├── brands.py              # Saudi/Gulf brand list (community-expandable)
+│   └── checks/                # One file per detection check
+├── web/                       # Django app — Arabic RTL interface
 ├── phishing_site/             # Django project settings
 ├── logs/                      # Rotating log files (gitignored)
 └── tests/
-    └── test_analyzer.py
+    └── test_analyzer.py       # 11 tests
 ```
 
 ---
@@ -175,7 +170,7 @@ arabic-phishing-detector/
 - [ ] Homoglyph detection (Arabic Unicode lookalikes in domains)
 - [ ] VirusTotal integration (optional API key)
 - [ ] More Gulf/MENA brands (UAE, Kuwait, Bahrain)
-- [ ] Docker deployment
+- [ ] Docker support
 
 ---
 
@@ -185,4 +180,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-*Built for defensive security and educational purposes. Do not use to evade detection — use to build it.*
+*Built for defensive security and educational purposes.*
