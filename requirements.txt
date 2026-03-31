@@ -1,4 +1,6 @@
 django>=4.2,<5.0
+gunicorn>=21.2
+whitenoise>=6.6
 requests>=2.32,<3.0
 python-whois>=0.9.4
 beautifulsoup4>=4.12
