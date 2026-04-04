@@ -163,24 +163,6 @@ Exits with code `1` if the URL is **High Risk**.
 
 ---
 
-## Deploy Your Own
-
-The project is ready to deploy on [Railway](https://railway.app) in one click:
-
-1. Fork this repo
-2. Create a new project on Railway → Deploy from GitHub
-3. Set these environment variables:
-
-| Variable | Value |
-|----------|-------|
-| `DJANGO_SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
-| `DJANGO_DEBUG` | `false` |
-| `DJANGO_ALLOWED_HOSTS` | your Railway domain |
-
-Railway runs `python manage.py migrate` and starts `gunicorn` automatically.
-
----
-
 ## Running Tests
 
 ```bash
@@ -222,15 +204,6 @@ arabic-phishing-detector/
 └── tests/
     └── test_analyzer.py       # 11 tests
 ```
-
----
-
-## Roadmap
-
-- [ ] Stage 3: REST API (`POST /api/analyze`) with rate limiting
-- [ ] VirusTotal integration (optional API key)
-- [ ] More Gulf/MENA brands (UAE, Kuwait, Bahrain)
-- [ ] Docker support
 
 ---
 
