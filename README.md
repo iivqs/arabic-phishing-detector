@@ -10,34 +10,94 @@
 
 A phishing URL detection tool built specifically for **Saudi and Gulf brand impersonation** — the attack surface that generic tools like VirusTotal and PhishTank underserve.
 
-Available as a **live web application** (Arabic RTL interface), a **command-line tool**, and soon a **REST API**.
+Available as a **live web application** (Arabic RTL interface), a **command-line tool**, and a **REST API** (coming soon).
 
 ---
 
-## Why This Exists
+## Why I Built This
 
-Phishing attacks targeting Saudi banks, telecom providers, and government portals have increased significantly. Existing detection tools are English-centric and rely on community-submitted blacklists. This tool takes a different approach: **deterministic, explainable checks** focused on the Saudi/Gulf attack surface — no black-box ML, no API keys required, no cloud dependency.
+During my time studying offensive security and SOC operations, I kept noticing the same gap: when I ran Saudi phishing URLs through standard tools — VirusTotal, PhishTank, URLVoid — they came back clean. Not because the URLs were safe, but because those platforms are built around English-speaking brand targets.
+
+Saudi banks, telecom providers like STC and Mobily, and government portals like Absher are impersonated constantly. The attacks are sophisticated — typosquatted `.net` domains that look like `.com.sa`, Arabic keyboard layout mistakes turned into phishing URLs, brand names injected as subdomains. None of that registers on generic scanners.
+
+So I built one that does. No black-box ML, no API keys, no community blacklists — just deterministic, explainable checks tuned specifically to the Saudi and Gulf attack surface. Every flag it raises tells you exactly why.
 
 ---
 
 ## Live Demo
 
-Try it now — no install needed:
+<table>
+<tr>
+<td width="50%" align="center">
+  <b>Homepage — Arabic RTL Interface</b><br><br>
+  <img src="docs/demo-home.png" alt="Arabic Phishing Detector Homepage" width="100%"/>
+</td>
+<td width="50%" align="center">
+  <b>Scan Result — 100/100 HIGH RISK</b><br><br>
+  <img src="docs/demo-result.png" alt="Phishing scan result showing 100/100 high risk score" width="100%"/>
+</td>
+</tr>
+</table>
 
-**[https://web-production-543fcd.up.railway.app](https://web-production-543fcd.up.railway.app)**
+Try it now — no install needed: **[https://web-production-543fcd.up.railway.app](https://web-production-543fcd.up.railway.app)**
 
 ---
 
-## Detection Checks (7 total)
+## Architecture
+
+```mermaid
+flowchart TD
+    A([URL Input]) --> B{Entry Point}
+    B -->|Web UI| C[Arabic RTL Interface<br/>Django Views]
+    B -->|CLI| D[cli.py<br/>Exit code 1 on HIGH RISK]
+    B -->|API| E[REST API<br/>coming soon]
+
+    C --> F
+    D --> F
+    E --> F
+
+    F[Analyzer Engine<br/>analyzer.py]
+
+    F --> G1[URL Structure<br/>+20]
+    F --> G2[Entropy Check<br/>+15]
+    F --> G3[Homoglyph Detection<br/>+25]
+    F --> G4[Arabic Keyboard Check<br/>+20]
+    F --> G5[Brand Injection<br/>+30]
+    F --> G6[Suspicious TLD<br/>+15]
+    F --> G7[Domain Lookalike<br/>+40]
+    F --> G8[WHOIS / Domain Age<br/>+25]
+    F --> G9[SSL Certificate<br/>+20]
+    F --> G10[Content Analysis<br/>+30]
+    F --> G11[Form Exfiltration<br/>+25]
+    F --> G12[Redirect Chain<br/>+15]
+
+    G1 & G2 & G3 & G4 & G5 & G6 & G7 & G8 & G9 & G10 & G11 & G12 --> H
+
+    H[Score Aggregator]
+    H --> I{Risk Score 0–100}
+
+    I -->|0–30| J[✅ Low Risk]
+    I -->|31–60| K[⚠️ Medium Risk]
+    I -->|61–100| L[🚨 High Risk]
+```
+
+---
+
+## Detection Checks (12 total)
 
 | Check | What It Detects | Max Score |
 |-------|----------------|-----------|
 | URL Structure | Raw IP as hostname, excessive subdomains, suspicious path keywords | +20 |
+| Entropy | Auto-generated high-entropy domains (common in phishing infrastructure) | +15 |
+| Homoglyph | Punycode domains using Unicode lookalikes to spoof brand names | +25 |
+| Arabic Keyboard | Saudi brand names typed with Arabic keyboard layout by mistake | +20 |
+| Brand Injection | Brand name placed as subdomain of unknown domain to fake legitimacy | +30 |
 | Suspicious TLD | Abused TLDs: `.xyz`, `.tk`, `.top`, `.click` and others | +15 |
 | Domain Lookalike | Typosquatting against Saudi brand domains (ratio + prefix matching) | +40 |
 | Domain Age | Domains registered less than 30 days ago | +25 |
 | SSL Certificate | Missing or invalid HTTPS certificate | +20 |
 | Content Analysis | Saudi brand names on a domain that isn't the real brand | +30 |
+| Form Exfiltration | Forms that submit data to an external domain | +25 |
 | Redirect Chain | Suspicious cross-domain redirect chains | +15 |
 
 **Risk levels:** 0–30 = Low &nbsp;·&nbsp; 31–60 = Medium &nbsp;·&nbsp; 61–100 = High
@@ -151,10 +211,11 @@ arabic-phishing-detector/
 ├── railway.toml               # Railway deploy config
 ├── requirements.txt
 ├── .env.example               # Environment variable template
+├── docs/                      # Screenshots and assets
 ├── detector/
 │   ├── analyzer.py            # Orchestrates all checks
 │   ├── brands.py              # Saudi/Gulf brand list (community-expandable)
-│   └── checks/                # One file per detection check
+│   └── checks/                # One file per detection check (12 checks)
 ├── web/                       # Django app — Arabic RTL interface
 ├── phishing_site/             # Django project settings
 ├── logs/                      # Rotating log files (gitignored)
@@ -167,7 +228,6 @@ arabic-phishing-detector/
 ## Roadmap
 
 - [ ] Stage 3: REST API (`POST /api/analyze`) with rate limiting
-- [ ] Homoglyph detection (Arabic Unicode lookalikes in domains)
 - [ ] VirusTotal integration (optional API key)
 - [ ] More Gulf/MENA brands (UAE, Kuwait, Bahrain)
 - [ ] Docker support
