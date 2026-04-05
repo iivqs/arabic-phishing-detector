@@ -48,7 +48,17 @@ def check(url: str) -> dict:
         score += 20
 
     # 2. Excessive subdomain depth
-    subdomain_count = len(hostname.split(".")) - 2  # subtract SLD + TLD
+    # For ccSLD domains like .com.sa, .gov.sa — the TLD is 2 parts, so we need
+    # to subtract 3 (subdomain + SLD + ccSLD) instead of 2.
+    parts = hostname.split(".")
+    if len(parts) >= 3 and parts[-2] in ("com", "gov", "edu", "net", "org"):
+        # e.g. login.stcpay.com.sa → TLD=".com.sa", SLD="stcpay", subdomains=["login"]
+        registered = ".".join(parts[-3:])  # stcpay.com.sa
+        subdomain_count = len(parts) - 3
+    else:
+        registered = ".".join(parts[-2:])  # stcpay.com
+        subdomain_count = len(parts) - 2
+
     if subdomain_count >= 3:
         issues.append(
             f"URL has {subdomain_count} subdomain levels — "
@@ -57,7 +67,6 @@ def check(url: str) -> dict:
         score += 15
     elif subdomain_count == 2:
         # Only flag if the registered domain isn't a known legit one
-        registered = ".".join(hostname.split(".")[-2:])
         if registered not in LEGITIMATE_DOMAINS:
             issues.append(f"URL has {subdomain_count} subdomain levels on an unknown domain.")
             score += 5

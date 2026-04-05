@@ -76,7 +76,8 @@ def check(url: str) -> dict:
         action = form.get("action", "").strip()
 
         # Empty or relative-path actions submit to the same page — safe
-        if not action or action.startswith("/") or action.startswith("#"):
+        # NOTE: "//" is a protocol-relative URL (e.g. //evil.com/steal) — NOT safe
+        if not action or (action.startswith("/") and not action.startswith("//")) or action.startswith("#"):
             continue
 
         # Resolve relative URLs to absolute

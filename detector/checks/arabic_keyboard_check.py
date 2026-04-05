@@ -40,7 +40,7 @@ _AR_TO_LATIN: dict[str, str] = {
     "ا": "h", "ت": "j", "ن": "k", "م": "l",
     "ظ": "z", "ء": "x", "ؤ": "c", "ر": "v", "ى": "n", "ة": "m",
     # Common diacritic-variant forms
-    "أ": "h", "إ": "h", "آ": "h", "ئ": "z", "ؤ": "c",
+    "أ": "h", "إ": "h", "آ": "h", "ئ": "z",
 }
 
 CLOSE_RATIO = 0.25

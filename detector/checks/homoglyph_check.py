@@ -85,15 +85,20 @@ def check(url: str) -> dict:
         }
 
     # --- Check 2: Punycode similar to a known brand ---
+    # Inspect ALL decoded labels, not just the first one — a homoglyph attack
+    # can appear in any label position (e.g. login.аpple-sa.com).
     if has_punycode:
-        skeleton = _to_ascii_skeleton(decoded_labels[0])
-        best_ratio, best_match = float("inf"), None
-        for brand, legit_domain in SAUDI_BRANDS.items():
-            legit_label = legit_domain.split(".")[0]
-            denom = max(len(skeleton), len(legit_label), 1)
-            ratio = Levenshtein.distance(skeleton, legit_label) / denom
-            if ratio < best_ratio:
-                best_ratio, best_match = ratio, (brand, legit_domain)
+        best_ratio, best_match, best_label_str = float("inf"), None, None
+        for decoded_label in decoded_labels:
+            skeleton = _to_ascii_skeleton(decoded_label)
+            if not skeleton:
+                continue
+            for brand, legit_domain in SAUDI_BRANDS.items():
+                legit_label = legit_domain.split(".")[0]
+                denom = max(len(skeleton), len(legit_label), 1)
+                ratio = Levenshtein.distance(skeleton, legit_label) / denom
+                if ratio < best_ratio:
+                    best_ratio, best_match, best_label_str = ratio, (brand, legit_domain), decoded_label
 
         if best_ratio <= CLOSE_RATIO and best_match:
             return {
@@ -101,8 +106,8 @@ def check(url: str) -> dict:
                 "status": "HIGH RISK",
                 "score": 25,
                 "detail": (
-                    f'Punycode domain "{hostname}" decodes to a label visually '
-                    f'similar to "{best_match[1]}" ({best_match[0]}) — '
+                    f'Punycode domain "{hostname}" decodes to label "{best_label_str}" '
+                    f'which is visually similar to "{best_match[1]}" ({best_match[0]}) — '
                     "homoglyph spoofing suspected."
                 ),
             }
